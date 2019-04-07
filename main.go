@@ -63,11 +63,11 @@ func main() {
 
 func init() {
 	PayoutCmd.Flags().Uint64VarP(&blockComm, "block-commission", "b", 10,
-		"block reward commission rate, 10% by default")
+		"commission rate of block reward, 10 percent by default")
 	PayoutCmd.Flags().Uint64VarP(&epochComm, "epoch-commission", "p", 10,
-		"epoch reward commission rate, 10% by default")
+		"commission rate of epoch bonus, 10 percent by default")
 	PayoutCmd.Flags().Uint64VarP(&foundationComm, "foundation-commission", "f", 10,
-		"extra reward commission rate, 10% by default")
+		"commission rate of foundation bonus, 10 percent by default")
 	PayoutCmd.Flags().StringVarP(&outputFile, "output", "o", "",
 		"file to output the result, output to stdout by default")
 	PayoutCmd.Flags().Uint64VarP(&epochToQuery, "epoch", "e", math.MaxUint64,
