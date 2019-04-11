@@ -94,16 +94,20 @@ func calculateReward(blks uint64, elected bool, votes *big.Int, total *big.Int) 
 	// block reward
 	reward.Block = 16 * blks
 
+	// The foundation allocates 1920 IOTX everyday. A single day has 24 hours
+	// therefore each epoch gets 1920/24 = 80 IOTX as foundation bonus and
+	// 300000/24 = 12500 IOTX as bonus reward.
+
 	// epoch reward
 	if elected {
-		reward.FoundationBonus = 1920
+		reward.FoundationBonus = 80
 	}
 
 	// bonus reward
-	extra, _ := new(big.Int).SetString("300000", 10)
-	extra = extra.Mul(extra, votes)
-	extra = extra.Div(extra, total)
-	reward.EpochBonus = extra.Uint64()
+	bonus, _ := new(big.Int).SetString("300000", 10)
+	bonus = bonus.Mul(bonus, votes)
+	bonus = bonus.Div(bonus, total)
+	reward.EpochBonus = bonus.Uint64()
 
 	return reward
 }
