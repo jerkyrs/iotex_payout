@@ -104,7 +104,7 @@ func calculateReward(blks uint64, elected bool, votes *big.Int, total *big.Int) 
 	}
 
 	// bonus reward
-	bonus, _ := new(big.Int).SetString("300000", 10)
+	bonus, _ := new(big.Int).SetString("12500", 10)
 	bonus = bonus.Mul(bonus, votes)
 	bonus = bonus.Div(bonus, total)
 	reward.EpochBonus = bonus.Uint64()
