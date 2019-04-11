@@ -16,7 +16,6 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -28,7 +27,7 @@ var (
 	epochComm           uint64
 	foundationComm      uint64
 	outputFile          string
-	epochToQuery        uint64
+	epochToQuery        string
 )
 
 var PayoutCmd = &cobra.Command{
@@ -70,8 +69,9 @@ func init() {
 		"commission rate of foundation bonus, 10 percent by default")
 	PayoutCmd.Flags().StringVarP(&outputFile, "output", "o", "",
 		"file to output the result, output to stdout by default")
-	PayoutCmd.Flags().Uint64VarP(&epochToQuery, "epoch", "e", math.MaxUint64,
-		"epoch number to calculate rewards, current epoch by default")
+	PayoutCmd.Flags().StringVarP(&epochToQuery, "epoch", "e", "",
+		"epoch(s) to calculate rewards, current epoch by default. " +
+		"The input is in range format (e.g. 1-2,4,7-10)")
 
 	if blockComm > 100 {
 		fmt.Println("valid value for block reward commission rate is from 0 to 100")

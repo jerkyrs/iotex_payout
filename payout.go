@@ -17,7 +17,9 @@ package main
 import (
 	"context"
 	"encoding/hex"
-	"math"
+	"strings"
+	"strconv"
+	"fmt"
 	"math/big"
 
 	"github.com/iotexproject/iotex-core/cli/ioctl/cmd/alias"
@@ -164,16 +166,18 @@ func delegateName(delegate string) []byte {
 	}
 }
 
-// populate reward shares
-func calculateRewardShares(operator string, delegate []byte, epoch_num uint64) *RewardShares {
+// populate reward shares for a single epoch
+func calculateEpochRewardShares(operator string, delegate []byte, epoch_num uint64) *RewardShares {
 	// get epoch response
 	getEpochResponse(epoch_num)
 
-	// get number of produced blocks
+	// get gravity height
 	gravity_height := epochGravityHeight()
 
-	// delegate is not in the BP list, no epoch reward
+	// get number of produced blocks
 	blocks := delegateProductivity(operator)
+
+	// delegate is not in the BP list, no epoch reward
 	elected := isDelegateElected(operator)
 
 	// get delegate's votes
@@ -191,6 +195,60 @@ func calculateRewardShares(operator string, delegate []byte, epoch_num uint64) *
 		CalculateShares(votes_distribution, delegate_votes)
 }
 
+// Generator for epoch range
+func epochRangeGen(epochs string) chan uint64 {
+	c := make(chan uint64)
+
+	// string parser for extracting epoch range
+	go func(input string) {
+		for _, part := range strings.Split(input, ",") {
+			if i := strings.Index(part[1:], "-"); i == -1 {
+				n, err := strconv.ParseUint(part, 10, 64)
+				if err != nil {
+					fmt.Println(err)
+					break
+				}
+				c <- n
+			} else {
+				n1, err := strconv.ParseUint(part[:i+1], 10, 64)
+				if err != nil {
+					fmt.Println(err)
+					break
+				}
+				n2, err := strconv.ParseUint(part[i+2:], 10, 64)
+				if err != nil {
+					fmt.Println(err)
+					break
+				}
+				if n2 < n1 {
+					fmt.Printf("Invalid range %d-%d\n", n1, n2)
+					break
+				}
+				for ii := n1; ii <= n2; ii++ {
+					c <- ii
+				}
+			}
+		}
+		close(c)
+	}(epochs)
+	return c
+}
+
+// populate reward shares for a range of epoches
+func calculateRewardShares(operator string, delegate []byte, epoches string) string {
+	if epoches == "" {
+		return calculateEpochRewardShares(
+			operator, delegate, currentEpochNum()).String()
+	}
+
+	// parse a range of epoches
+	var result string
+	for e := range epochRangeGen(epoches) {
+		result += calculateEpochRewardShares(operator, delegate, e).String() + "\n"
+	}
+	return result
+}
+
 // payout pays tokens out to delegates on IoTeX blockchain
 func payout(delegate string, operator string) string {
 	// get operator's address
@@ -202,9 +260,5 @@ func payout(delegate string, operator string) string {
 	// get delegate's name to 12-byte array
 	delegate_name := delegateName(delegate)
 
-	// get epoch
-	if epochToQuery == math.MaxUint64 {
-		epochToQuery = currentEpochNum()
-	}
-	return calculateRewardShares(operator_addr, delegate_name, epochToQuery).String()
+	return calculateRewardShares(operator_addr, delegate_name, epochToQuery)
 }
