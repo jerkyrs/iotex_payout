@@ -192,11 +192,11 @@ func calculateEpochRewardShares(operator string, delegate []byte, epoch_num uint
 
 	// populate rewardshare structure
 	return NewRewardShares().
-		SetEpochNum(epoch_num).
+		SetEpochNum(strconv.FormatUint(epoch_num, 10)).
 		SetProductivity(blocks).
 		SetTotalVotes(total_votes).
 		SetReward(reward).
-		CalculateShares(votes_distribution, delegate_votes)
+		CalculateShares(votes_distribution, delegate_votes, epoch_num)
 }
 
 // Generator for epoch range
@@ -238,19 +238,21 @@ func epochRangeGen(epochs string) chan uint64 {
 	return c
 }
 
-// populate reward shares for a range of epoches
-func calculateRewardShares(operator string, delegate []byte, epoches string) string {
-	if epoches == "" {
+// populate reward shares for a range of epochs
+func calculateRewardShares(operator string, delegate []byte, epochs string) string {
+	if epochs == "" {
 		return calculateEpochRewardShares(
 			operator, delegate, currentEpochNum()).String()
 	}
 
-	// parse a range of epoches
-	var result string
-	for e := range epochRangeGen(epoches) {
-		result += calculateEpochRewardShares(operator, delegate, e).String() + "\n"
+	// parse a range of epochs
+	result := NewRewardShares()
+	result.SetEpochNum(epochs)
+	for epoch := range epochRangeGen(epochs) {
+		reward := calculateEpochRewardShares(operator, delegate, epoch)
+		result = result.Combine(reward)
 	}
-	return result
+	return result.String()
 }
 
 // payout pays tokens out to delegates on IoTeX blockchain

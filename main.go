@@ -28,6 +28,7 @@ var (
 	foundationComm      uint64
 	outputFile          string
 	epochToQuery        string
+	simpleJson          bool
 )
 
 var PayoutCmd = &cobra.Command{
@@ -72,6 +73,8 @@ func init() {
 	PayoutCmd.Flags().StringVarP(&epochToQuery, "epoch", "e", "",
 		"epoch(s) to calculate rewards, current epoch by default. " +
 		"The input is in range format (e.g. 1-2,4,7-10)")
+	PayoutCmd.Flags().BoolVarP(&simpleJson, "simple", "s", false,
+		"also print out votes information, print rewards only by default")
 
 	if blockComm > 100 {
 		fmt.Println("valid value for block reward commission rate is from 0 to 100")

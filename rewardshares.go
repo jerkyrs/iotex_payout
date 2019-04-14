@@ -36,17 +36,25 @@ type Reward struct {
 type Share struct {
 	IOAddr  string `json:"ioaddr"`
 	ETHAddr string `json:"ethaddr"`
-	Votes   string `json:"votes"`
-	Share   uint64 `json:"share"`
+	Votes   []string `json:"votes"`
+	Share   []uint64 `json:share`
+	VotedPeriod []uint64 `json:"voteperiod"`
 	Reward  Reward `json:"reward"`
 }
 
 type RewardShares struct {
-	EpochNum     uint64  `json:"epochnum"`
-	Productivity uint64  `json:"productivity"`
-	TotalVotes   string  `json:"votes"`
-	Reward       Reward  `json:"reward"`
-	Shares       []Share `json:"shares"`
+	EpochNum     string   `json:"epochnum"`
+	Productivity uint64   `json:"productivity"`
+	TotalVotes   []string `json:"votes"`
+	Reward       Reward   `json:"reward"`
+	Shares       []Share  `json:"shares"`
+}
+
+func addReward(self Reward, other Reward) Reward {
+	return Reward{
+		self.Block + other.Block,
+		self.FoundationBonus + other.FoundationBonus,
+		self.EpochBonus + other.EpochBonus}
 }
 
 // Set total reward
@@ -57,12 +65,12 @@ func (rs *RewardShares) SetReward(total Reward) *RewardShares {
 
 // Set total votes
 func (rs *RewardShares) SetTotalVotes(votes *big.Int) *RewardShares {
-	rs.TotalVotes = votes.String()
+	rs.TotalVotes = []string{votes.String()}
 	return rs
 }
 
 // Set epoch number
-func (rs *RewardShares) SetEpochNum(epoch uint64) *RewardShares {
+func (rs *RewardShares) SetEpochNum(epoch string) *RewardShares {
 	rs.EpochNum = epoch
 	return rs
 }
@@ -73,6 +81,34 @@ func (rs *RewardShares) SetProductivity(prod uint64) *RewardShares {
 	return rs
 }
 
+// Combine two epochs' rewardshares
+func (rs *RewardShares) Combine(other *RewardShares) *RewardShares {
+	rs.Productivity += other.Productivity
+	rs.TotalVotes = append(rs.TotalVotes, other.TotalVotes...)
+
+	rs.Reward = addReward(rs.Reward, other.Reward)
+
+	for _, right := range other.Shares {
+		existing := false
+		for i, left := range rs.Shares {
+			// update the voters that exist in previous epochs.
+			if right.IOAddr == left.IOAddr {
+				existing = true
+				rs.Shares[i].Reward = addReward(left.Reward, right.Reward)
+				if !simpleJson {
+					rs.Shares[i].Votes = append(left.Votes, right.Votes...)
+					rs.Shares[i].Share = append(left.Share, right.Share...)
+					rs.Shares[i].VotedPeriod = append(left.VotedPeriod, right.VotedPeriod...)
+				}
+			}
+		}
+		if !existing {
+			rs.Shares = append(rs.Shares, right)
+		}
+	}
+	return rs
+}
+
 // Debug string
 func (rs *RewardShares) String() string {
 	rs_str, _ := json.Marshal(rs)
@@ -80,7 +116,7 @@ func (rs *RewardShares) String() string {
 }
 
 // Based on the obtained votes, calculate voter's shares
-func (rs *RewardShares) CalculateShares(bps map[string]*big.Int, total *big.Int) *RewardShares {
+func (rs *RewardShares) CalculateShares(bps map[string]*big.Int, total *big.Int, epoch uint64) *RewardShares {
 	// calculate each voter's meta info
 	rs.Shares = nil
 	for addr, vote := range bps {
@@ -90,17 +126,21 @@ func (rs *RewardShares) CalculateShares(bps map[string]*big.Int, total *big.Int)
 		share.IOAddr = hex_addr.String()
 		share.ETHAddr = addr
 
-		share.Votes = vote.Text(10)
-
 		base := big.NewInt(1000)
 		base = base.Mul(base, vote)
 		base = base.Div(base, total)
-		share.Share = base.Uint64()
+		percentMille := base.Uint64()
+
+		if !simpleJson {
+			share.Votes = []string{vote.Text(10)}
+			share.Share = []uint64{percentMille}
+			share.VotedPeriod = []uint64{epoch}
+		}
 
 		share.Reward = Reward{
-			share.Share * rs.Reward.Block * (100 - blockComm) / (1000 * 100),
-			share.Share * rs.Reward.FoundationBonus * (100 - foundationComm) / (1000 * 100),
-			share.Share * rs.Reward.EpochBonus * (100 - epochComm) / (1000 * 100)}
+			percentMille * rs.Reward.Block * (100 - blockComm) / (1000 * 100),
+			percentMille * rs.Reward.FoundationBonus * (100 - foundationComm) / (1000 * 100),
+			percentMille * rs.Reward.EpochBonus * (100 - epochComm) / (1000 * 100)}
 
 		rs.Shares = append(rs.Shares, share)
 	}
