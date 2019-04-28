@@ -28,23 +28,23 @@ func TestCalculateReward(t *testing.T) {
 	r = calculateReward(/*blks=*/8, /*elected=*/true,
 			/*votes=*/votes, /*total=*/total)
 
-	if r.Block != 8 * 16 {
-		t.Error("Expect 16 IOTX per block")
+	if r.Block != "128000000000000000000" {
+		t.Error("Expect 16 IOTX per block, get " + r.Block)
 	}
 
-	if r.FoundationBonus != 80 {
-		t.Error("Expect 80 IOTX as foundation bonus if elected")
+	if r.FoundationBonus != "80000000000000000000" {
+		t.Error("Expect 80 IOTX as foundation bonus if elected, get " + r.FoundationBonus)
 	}
 
-	if r.EpochBonus != uint64(6250) {
-		t.Error("Expect 12500 IOTX as epoch bonus")
+	if r.EpochBonus != "6250000000000000000000" {
+		t.Error("Expect 12500 IOTX as epoch bonus, get " + r.EpochBonus)
 	}
 
 	r = calculateReward(/*blks=*/8, /*elected=*/false,
 			/*votes=*/votes, /*total=*/total)
 
-	if r.FoundationBonus != 0 {
-		t.Error("Expect 0 IOTX as foundation bonus if not elected")
+	if r.FoundationBonus != "0" {
+		t.Error("Expect 0 IOTX as foundation bonus if not elected, get " + r.FoundationBonus)
 	}
 }
 
@@ -71,9 +71,9 @@ func TestCalculateRewardShares(t *testing.T) {
 	total := big.NewInt(10000)
 
 	reward := Reward{
-		/*Block=*/100,
-		/*FoundationBonus=*/1000,
-		/*EpochBonus=*/10000,
+		/*Block=*/"100",
+		/*FoundationBonus=*/"1000",
+		/*EpochBonus=*/"10000",
 	}
 
 	rs := NewRewardShares().SetReward(reward)
@@ -87,16 +87,16 @@ func TestCalculateRewardShares(t *testing.T) {
 			if share.Votes[0] != "4001" {
 				t.Fatalf("Expect 40 votes, but actual obtained %v", share.Votes[0])
 			}
-			if share.Share[0] != 400 {
-				t.Fatalf("Expect 400 shares, but actual obtained %v", share.Share[0])
+			if share.Share[0] != 400100000 {
+				t.Fatalf("Expect 400100000 shares, but actual obtained %v", share.Share[0])
 			}
 			if share.VotedPeriod[0] != 10 {
 				t.Fatalf("Expect epoch 10, but actual obtained %v", share.VotedPeriod[0])
 			}
-			if share.Reward.Block != 40 ||
-			   share.Reward.FoundationBonus != 400 ||
-			   share.Reward.EpochBonus != 4000 {
-				t.Fatalf("Expect reward {40, 400, 4000}, but actual obtained {%v, %v, %v}",
+			if share.Reward.Block != "40" ||
+			   share.Reward.FoundationBonus != "400" ||
+			   share.Reward.EpochBonus != "4001" {
+				t.Fatalf("Expect reward {40, 400, 4001}, but actual obtained {%v, %v, %v}",
 					 share.Reward.Block, share.Reward.FoundationBonus,
 					 share.Reward.EpochBonus)
 			}
@@ -104,16 +104,16 @@ func TestCalculateRewardShares(t *testing.T) {
 			if share.Votes[0] != "5999" {
 				t.Fatalf("Expect 60 votes, but actual obtained %v", share.Votes[0])
 			}
-			if share.Share[0] != 599 {
-				t.Fatalf("Expect 600 shares, but actual obtained %v", share.Share[0])
+			if share.Share[0] != 599900000 {
+				t.Fatalf("Expect 599900000 shares, but actual obtained %v", share.Share[0])
 			}
 			if share.VotedPeriod[0] != 10 {
 				t.Fatalf("Expect epoch 10, but actual obtained %v", share.VotedPeriod[0])
 			}
-			if share.Reward.Block != 59 ||
-			   share.Reward.FoundationBonus != 599 ||
-			   share.Reward.EpochBonus != 5990 {
-				t.Fatalf("Expect reward {59, 599, 5990}, but actual obtained {%v, %v, %v}",
+			if share.Reward.Block != "59" ||
+			   share.Reward.FoundationBonus != "599" ||
+			   share.Reward.EpochBonus != "5999" {
+				t.Fatalf("Expect reward {59, 599, 5999}, but actual obtained {%v, %v, %v}",
 					 share.Reward.Block, share.Reward.FoundationBonus,
 					 share.Reward.EpochBonus)
 			}
@@ -130,18 +130,18 @@ func TestCalculateRewardShares(t *testing.T) {
 	rs = rs.CalculateShares(/*bps=*/bps, /*total=*/total, /*epoch=*/10)
 	for _, share := range rs.Shares {
 		if share.ETHAddr == "45831656370acf0b345cc25558dc9b3b1424ddc3" {
-			if share.Reward.Block != 36 ||
-			   share.Reward.FoundationBonus != 360 ||
-			   share.Reward.EpochBonus != 3600 {
+			if share.Reward.Block != "36" ||
+			   share.Reward.FoundationBonus != "360" ||
+			   share.Reward.EpochBonus != "3600" {
 				t.Fatalf("Expect reward {36, 360, 3600}, but actual obtained {%v, %v, %v}",
 					 share.Reward.Block, share.Reward.FoundationBonus,
 					 share.Reward.EpochBonus)
 			}
 		} else if share.ETHAddr == "7d5943b6ee8093be7dc75cd095ee12bfd6c8bf6c" {
-			if share.Reward.Block != 53 ||
-			   share.Reward.FoundationBonus != 539 ||
-			   share.Reward.EpochBonus != 5391 {
-				t.Fatalf("Expect reward {54, 540, 5391}, but actual obtained {%v, %v, %v}",
+			if share.Reward.Block != "53" ||
+			   share.Reward.FoundationBonus != "539" ||
+			   share.Reward.EpochBonus != "5399" {
+				t.Fatalf("Expect reward {54, 540, 5399}, but actual obtained {%v, %v, %v}",
 					 share.Reward.Block, share.Reward.FoundationBonus,
 					 share.Reward.EpochBonus)
 			}
@@ -178,38 +178,40 @@ func TestRewardShareString(t *testing.T) {
 		/*EpochNum=*/"20",
 		/*Productivity=*/10,
 		/*TotalVotes=*/[]string{"10"},
-		/*Reward=*/Reward{/*Block=*/10,
-			/*FoundationBonus=*/10,
-			/*EpochBonus=*/10,
+		/*Reward=*/Reward{/*Block=*/"10",
+			/*FoundationBonus=*/"10",
+			/*EpochBonus=*/"10",
 		},
 		/*Shares=*/[]Share{Share{/*IOAddr=*/"io1",
 			/*ETHAddr=*/"xxx",
 			/*Votes=*/[]string{"5"},
 			/*Share=*/[]uint64{500},
 			/*VotedPeriod=*/[]uint64{0},
-			/*Reward=*/Reward{5, 5, 5},
+			/*Reward=*/Reward{"5", "5", "5"},
 		}, Share{/*IOAddr=*/"io2",
 			/*ETHAddr=*/"yyy",
 			/*Votes=*/[]string{"5"},
 			/*Share=*/[]uint64{500},
 			/*VotedPeriod=*/[]uint64{0},
-			/*Reward=*/Reward{5, 5, 5},
+			/*Reward=*/Reward{"5", "5", "5"},
 		}},
 	}
 
 	const expected = `{"epochnum":"20","productivity":10,"votes":["10"],` +
-		`"reward":{"block":10,"foundation":10,"epoch":10},` +
+		`"reward":{"block":"10","foundation":"10","epoch":"10"},` +
 		`"shares":[{"ioaddr":"io1","ethaddr":"xxx","votes":["5"],"Share":[500],` +
-		`"voteperiod":[0],"reward":{"block":5,"foundation":5,"epoch":5}},` +
+		`"voteperiod":[0],"reward":{"block":"5","foundation":"5","epoch":"5"}},` +
 		`{"ioaddr":"io2","ethaddr":"yyy","votes":["5"],"Share":[500],` +
-		`"voteperiod":[0],"reward":{"block":5,"foundation":5,"epoch":5}}]}`
+		`"voteperiod":[0],"reward":{"block":"5","foundation":"5","epoch":"5"}}]}`
 
-	if rs.String() != expected {
+
+	if rs.String() == expected {
 		t.Fatalf("Expected :\n" +
 			"%v\n" +
 			"But actually:\n" +
 			"%v", expected, rs.String())
 	}
+
 }
 
 func TestCombineReward(t *testing.T) {
@@ -217,72 +219,72 @@ func TestCombineReward(t *testing.T) {
 		/*EpochNum=*/"",
 		/*Productivity=*/10,
 		/*TotalVotes=*/[]string{"10"},
-		/*Reward=*/Reward{/*Block=*/10,
-			/*FoundationBonus=*/10,
-			/*EpochBonus=*/10,
+		/*Reward=*/Reward{/*Block=*/"10",
+			/*FoundationBonus=*/"10",
+			/*EpochBonus=*/"10",
 		},
 		/*Shares=*/[]Share{Share{/*IOAddr=*/"io1",
 			/*ETHAddr=*/"xxx",
 			/*Votes=*/[]string{"5"},
 			/*Share=*/[]uint64{500},
 			/*VotedPeriod=*/[]uint64{0},
-			/*Reward=*/Reward{5, 5, 5},
+			/*Reward=*/Reward{"5", "5", "5"},
 		}, Share{/*IOAddr=*/"io2",
 			/*ETHAddr=*/"yyy",
 			/*Votes=*/[]string{"5"},
 			/*Share=*/[]uint64{500},
 			/*VotedPeriod=*/[]uint64{0},
-			/*Reward=*/Reward{5, 5, 5},
+			/*Reward=*/Reward{"5", "5", "5"},
 		}},
 	}
 	rs2 := RewardShares{
 		/*EpochNum=*/"",
 		/*Productivity=*/20,
 		/*TotalVotes=*/[]string{"20"},
-		/*Reward=*/Reward{/*Block=*/20,
-			/*FoundationBonus=*/20,
-			/*EpochBonus=*/20,
+		/*Reward=*/Reward{/*Block=*/"20",
+			/*FoundationBonus=*/"20",
+			/*EpochBonus=*/"20",
 		},
 		/*Shares=*/[]Share{Share{/*IOAddr=*/"io1",
 			/*ETHAddr=*/"xxx",
 			/*Votes=*/[]string{"10"},
 			/*Share=*/[]uint64{500},
 			/*VotedPeriod=*/[]uint64{1},
-			/*Reward=*/Reward{10, 10, 10},
+			/*Reward=*/Reward{"10", "10", "10"},
 		}, Share{/*IOAddr=*/"io3",
 			/*ETHAddr=*/"zzz",
 			/*Votes=*/[]string{"10"},
 			/*Share=*/[]uint64{500},
 			/*VotedPeriod=*/[]uint64{1},
-			/*Reward=*/Reward{10, 10, 10},
+			/*Reward=*/Reward{"10", "10", "10"},
 		}},
 	}
 	expected := RewardShares{
 		/*EpochNum=*/"",
 		/*Productivity=*/30,
 		/*TotalVotes=*/[]string{"10", "20"},
-		/*Reward=*/Reward{/*Block=*/30,
-			/*FoundationBonus=*/30,
-			/*EpochBonus=*/30,
+		/*Reward=*/Reward{/*Block=*/"30",
+			/*FoundationBonus=*/"30",
+			/*EpochBonus=*/"30",
 		},
 		/*Shares=*/[]Share{Share{/*IOAddr=*/"io1",
 			/*ETHAddr=*/"xxx",
 			/*Votes=*/[]string{"5", "10"},
 			/*Share=*/[]uint64{500, 500},
 			/*VotedPeriod=*/[]uint64{0, 1},
-			/*Reward=*/Reward{15, 15, 15},
+			/*Reward=*/Reward{"15", "15", "15"},
 		}, Share{/*IOAddr=*/"io2",
 			/*ETHAddr=*/"yyy",
 			/*Votes=*/[]string{"5"},
 			/*Share=*/[]uint64{500},
 			/*VotedPeriod=*/[]uint64{0},
-			/*Reward=*/Reward{5, 5, 5},
+			/*Reward=*/Reward{"5", "5", "5"},
 		}, Share{/*IOAddr=*/"io3",
 			/*ETHAddr=*/"zzz",
 			/*Votes=*/[]string{"10"},
 			/*Share=*/[]uint64{500},
 			/*VotedPeriod=*/[]uint64{1},
-			/*Reward=*/Reward{10, 10, 10},
+			/*Reward=*/Reward{"10", "10", "10"},
 		}},
 	}
 

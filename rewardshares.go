@@ -28,9 +28,9 @@ import (
 //
 // see https://medium.com/iotex/iotex-delegates-program-application-voting-and-rewards-5cab7e87bd20
 type Reward struct {
-	Block           uint64 `json:"block"`
-	FoundationBonus uint64 `json:"foundation"`
-	EpochBonus      uint64 `json:"epoch"`
+	Block           string `json:"block"`
+	FoundationBonus string `json:"foundation"`
+	EpochBonus      string `json:"epoch"`
 }
 
 type Share struct {
@@ -51,10 +51,16 @@ type RewardShares struct {
 }
 
 func addReward(self Reward, other Reward) Reward {
+	stradd := func(a string, b string) string {
+		aa, _ := new(big.Int).SetString(a, 10)
+		bb, _ := new(big.Int).SetString(b, 10)
+		return new(big.Int).Add(aa, bb).Text(10)
+	}
 	return Reward{
-		self.Block + other.Block,
-		self.FoundationBonus + other.FoundationBonus,
-		self.EpochBonus + other.EpochBonus}
+		stradd(self.Block, other.Block),
+		stradd(self.FoundationBonus, other.FoundationBonus),
+		stradd(self.EpochBonus, other.EpochBonus),
+	}
 }
 
 // Set total reward
@@ -88,11 +94,12 @@ func (rs *RewardShares) Combine(other *RewardShares) *RewardShares {
 
 	rs.Reward = addReward(rs.Reward, other.Reward)
 
+	var total []Share
 	for _, right := range other.Shares {
 		existing := false
 		for i, left := range rs.Shares {
 			// update the voters that exist in previous epochs.
-			if right.IOAddr == left.IOAddr {
+			if right.ETHAddr == left.ETHAddr {
 				existing = true
 				rs.Shares[i].Reward = addReward(left.Reward, right.Reward)
 				if !simpleJson {
@@ -100,18 +107,21 @@ func (rs *RewardShares) Combine(other *RewardShares) *RewardShares {
 					rs.Shares[i].Share = append(left.Share, right.Share...)
 					rs.Shares[i].VotedPeriod = append(left.VotedPeriod, right.VotedPeriod...)
 				}
+				break
 			}
 		}
 		if !existing {
-			rs.Shares = append(rs.Shares, right)
+			total = append(total, right)
 		}
 	}
+	rs.Shares = append(rs.Shares, total...)
+
 	return rs
 }
 
 // Debug string
 func (rs *RewardShares) String() string {
-	rs_str, _ := json.Marshal(rs)
+	rs_str, _ := json.MarshalIndent(rs, "", "    ")
 	return string(rs_str)
 }
 
@@ -126,22 +136,29 @@ func (rs *RewardShares) CalculateShares(bps map[string]*big.Int, total *big.Int,
 		share.IOAddr = hex_addr.String()
 		share.ETHAddr = addr
 
-		base := big.NewInt(1000)
-		base = base.Mul(base, vote)
-		base = base.Div(base, total)
-		percentMille := base.Uint64()
+		base, _ := new(big.Int).SetString("1000000000", 10)
+		percentMille := new(big.Int).Mul(base, vote)
+		percentMille = percentMille.Div(percentMille, total)
 
 		if !simpleJson {
 			share.Votes = []string{vote.Text(10)}
-			share.Share = []uint64{percentMille}
+			share.Share = []uint64{percentMille.Uint64()}
 			share.VotedPeriod = []uint64{epoch}
 		}
 
-		share.Reward = Reward{
-			percentMille * rs.Reward.Block * (100 - blockComm) / (1000 * 100),
-			percentMille * rs.Reward.FoundationBonus * (100 - foundationComm) / (1000 * 100),
-			percentMille * rs.Reward.EpochBonus * (100 - epochComm) / (1000 * 100)}
+		discount := func(percent *big.Int, base *big.Int, value string, commission int64) string {
+			v, _ := new(big.Int).SetString(value, 10)
+			v = v.Mul(percent, v)
+			v = v.Mul(v, big.NewInt(100 - commission))
+			v = v.Div(v, new(big.Int).Mul(base, big.NewInt(100)))
+			return v.Text(10)
+		}
 
+		share.Reward = Reward{
+			discount(vote, total, rs.Reward.Block, blockComm),
+			discount(vote, total, rs.Reward.FoundationBonus, foundationComm),
+			discount(vote, total, rs.Reward.EpochBonus, epochComm),
+		}
 		rs.Shares = append(rs.Shares, share)
 	}
 
@@ -150,5 +167,7 @@ func (rs *RewardShares) CalculateShares(bps map[string]*big.Int, total *big.Int,
 
 // Allocate new RewardShares
 func NewRewardShares() *RewardShares {
-	return new(RewardShares)
+	rs := new(RewardShares)
+	rs.Reward = Reward{"0", "0", "0"}
+	return rs
 }

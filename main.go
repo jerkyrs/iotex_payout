@@ -23,17 +23,17 @@ import (
 
 // Flags
 var (
-	blockComm           uint64
-	epochComm           uint64
-	foundationComm      uint64
+	blockComm           int64
+	epochComm           int64
+	foundationComm      int64
 	outputFile          string
 	epochToQuery        string
 	simpleJson          bool
 )
 
 var PayoutCmd = &cobra.Command{
-	Use:   "iotex_payout DELEGATE_NAME OPERATOR_ALIAS",
-	Short: "Calculates voters' reward shares for IOTEX blockchain",
+	Use:   "iotex_payout DELEGATE_NAME OPERATOR_[ALIAS|ADDRESS]",
+	Short: "Calculates voters' reward shares for IOTEX blockchain, output the input for iotex multisend",
 	Args:  cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		output := payout(args[0], args[1])
@@ -62,12 +62,12 @@ func main() {
 }
 
 func init() {
-	PayoutCmd.Flags().Uint64VarP(&blockComm, "block-commission", "b", 10,
-		"commission rate of block reward, 10 percent by default")
-	PayoutCmd.Flags().Uint64VarP(&epochComm, "epoch-commission", "p", 10,
-		"commission rate of epoch bonus, 10 percent by default")
-	PayoutCmd.Flags().Uint64VarP(&foundationComm, "foundation-commission", "f", 10,
-		"commission rate of foundation bonus, 10 percent by default")
+	PayoutCmd.Flags().Int64VarP(&blockComm, "block-commission", "b", 100,
+		"commission rate of block reward, 100% by default")
+	PayoutCmd.Flags().Int64VarP(&epochComm, "epoch-commission", "p", 100,
+		"commission rate of epoch bonus, 100% by default")
+	PayoutCmd.Flags().Int64VarP(&foundationComm, "foundation-commission", "f", 100,
+		"commission rate of foundation bonus, 100% by default")
 	PayoutCmd.Flags().StringVarP(&outputFile, "output", "o", "",
 		"file to output the result, output to stdout by default")
 	PayoutCmd.Flags().StringVarP(&epochToQuery, "epoch", "e", "",
@@ -77,15 +77,15 @@ func init() {
 		"also print out votes information, print rewards only by default")
 
 	if blockComm > 100 {
-		fmt.Println("valid value for block reward commission rate is from 0 to 100")
+		fmt.Println("valid value for block reward commission rate is up to 100")
 		os.Exit(2)
 	}
 	if epochComm > 100 {
-		fmt.Println("valid value for epoch reward commission rate is from 0 to 100")
+		fmt.Println("valid value for epoch reward commission rate is up to 100")
 		os.Exit(2)
 	}
 	if foundationComm > 100 {
-		fmt.Println("valid value for extra reward commission rate is from 0 to 100")
+		fmt.Println("valid value for extra reward commission rate is up to 100")
 		os.Exit(2)
 	}
 }
