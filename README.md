@@ -38,3 +38,16 @@ go build
 ```
 iotex_payout [arguments]
 ```
+
+
+### Run iotex payout
+Build the container
+```
+docker build -f Dockerfile . -t iotexpayout
+```
+
+Run the container interactively
+```
+docker run -ti iotexpayout bash
+```
+
