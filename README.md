@@ -51,3 +51,13 @@ Run the container interactively
 docker run -ti iotexpayout bash
 ```
 
+Use ioctl to setup operator account
+```
+ioctl account import operator
+```
+
+Run iotex_payout 
+```
+iotex_payout delegate operator -e 100 -b 95 -p 90 -f 80
+```
+
