@@ -40,7 +40,7 @@ iotex_payout [arguments]
 ```
 
 
-### Run iotex payout
+### Run under Docker
 Build the container
 ```
 docker build -f Dockerfile . -t iotexpayout
